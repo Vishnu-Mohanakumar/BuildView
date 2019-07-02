@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Stager</title>
+<meta name="generator" content="Bootply" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="" />
+<link
+	href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"
+	rel="stylesheet">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
+
+<!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+<link rel="apple-touch-icon" href="/bootstrap/img/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="72x72"
+	href="/bootstrap/img/apple-touch-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="114x114"
+	href="/bootstrap/img/apple-touch-icon-114x114.png">
+
+<!-- CSS code from Bootply.com editor -->
+
+<style type="text/css">
+/* Sticky footer styles
+-------------------------------------------------- */
+html, body {
+	height: 100%;
+	/* The html and body elements cannot have any padding or margin. */
+}
+/* Wrapper for page content to push down footer */
+#wrap {
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	/* Negative indent footer by its height */
+	margin: 0 auto -60px;
+	/* Pad bottom by footer height */
+	padding: 0 0 60px;
+}
+/* Set the fixed height of the footer here */
+#footer {
+	height: 60px;
+	background-color: #f5f5f5;
+}
+/* Custom page CSS
+-------------------------------------------------- */
+/* Not required for template or sticky footer method. */
+#wrap>.container {
+	padding: 60px 15px 0;
+}
+
+.container .credit {
+	margin: 20px 0;
+}
+
+#footer>.container {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+code {
+	font-size: 80%;
+}
+
+/* Enter and leave animations can use different */
+/* durations and timing functions.              */
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
+.container .navbar-right {
+    margin-top: 10px;
+}
+
+</style>
+</head>
+
+<!-- HTML code from Bootply.com editor -->
+
+<body>
+
+	<!-- Wrap all page content here -->
+	<div id="wrap" style="display: none">
+
+		<!-- Fixed navbar -->
+		<div class="navbar navbar-default navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse"
+						data-target=".navbar-collapse">
+						<span class="icon-bar"></span> <span class="icon-bar"></span> <span
+							class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">Stager</a>
+				</div>
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#jobs" v-on:click="tabClicked('jobs')">Jobs</a></li>
+					</ul>
+					<ul class="nav navbar-nav">
+						<li><a href="#deployments" v-on:click="tabClicked('deployments')">Deployments</a></li>
+					</ul>
+					<ul class="nav navbar-right">
+						<li><p>
+							<select v-model="selectedProject" id="project" class="selectpicker" v-on:change="loadProject">
+								<option :value="null">Select Project</option>
+								<option v-for="prj in projects" :value="prj">{{prj}}</option>
+							</select></p>
+						</li>
+					</ul>
+				</div>
+
+
+				<!--/.nav-collapse -->
+			</div>
+
+		</div>
+
+	  <!-- deployments -->
+	  <div v-if="tab == 'deployments'" class="container">
+
+		<div>
+			<div class="pull-left">
+				<h1 class="text-primary">Deployments</h1>
+			</div>
+			<div class="pull-right" style="vertical-align: bottom">
+			<p>
+				<a href="" v-on:click="callme($event)">Refresh</a>
+				</p>
+			</div>
+		</div>
+		<div v-if="!selectedProject" style="clear:both">
+			<p>
+				Please choose a project from the list
+			</p>
+		</div>
+		<div v-if="selectedProject">
+			<div>
+				<table class="table table-bordered">
+					<tr>
+						<th>Application</th>
+						<th>Stage</th>
+						<th>Version(s)</th>
+						<th>Tag(s)</th>
+						<th>First Started At</th>
+						<th># Restarts</th>
+						<th>Status</th>
+						<!--th>Ready</th-->
+					</tr>
+					<tr class="active" v-for="appl in allApps">
+						<td><a v-bind:href="''+appl.url+appl.contextPath+''" target="_blank" v-if="appl.url">{{appl.status.containerStatuses[0].name}}</a>
+							<button type="button" class="btn btn-sm" v-on:click="reloadApp(appl.boxId, appl.status.containerStatuses[0].name)" v-if="appl.status.containerStatuses[0].name == 'rap'">
+							<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+							<span v-if="!appl.url">{{appl.status.containerStatuses[0].name}}</span></td>
+						<td>{{appl.stage}}</td>
+						<td>{{appl.versions.filter(function(version) { return version.match(/^\d/) } ).sort().join()}}</td>
+						<td>{{appl.versions.filter(function(version) { return !version.match(/^\d/) } ).sort().join()}}</td>
+						<td>{{new Date(appl.status.startTime).toLocaleString()}}</td>
+						<td>{{appl.status.containerStatuses[0].restartCount}}</td>
+						<td>{{appl.status.phase}}</td>
+						<!--td>{{app.status.containerStatuses[0].ready}}</td-->
+					</tr>
+				</table>
+			</div>
+		</div>
+	  </div>
+		
+	  <!-- jobs -->
+	  <div v-if="tab == 'jobs'" class="container">
+
+		<h1 class="text-primary">Jobs</h1>
+
+			<div class="form-group">
+			    <label class="control-label" for="email">Please enter your email before you begin</label>
+			    <input v-model="user" class="form-control" type="email" placeholder="Email" required="true" v-on:change="loadProject">
+			</div>
+
+			<div v-if="!selectedProject">
+				Please choose a project from the list
+			</div>
+
+		<div v-if="(selectedProject)">
+			<div class="page-header">
+				<h2>Create new Staging Job</h2>
+			</div>
+
+			<div>
+				<div>
+					<h3>with applications:</h3>
+				</div>
+
+				<div>
+					<h3>
+						<select v-model="selectedApplication" id="newjob_app_name"
+							class="selectpicker" v-on:change="onApplicationSelected" :disabled="!selectedProject">
+							<option :value="null">Application</option>
+							<option v-for="app_obj in applications" :value="app_obj">{{app_obj.name}}</option>
+						</select>
+						<select v-model="selectedVersion" id="newjob_version"
+							class="selectpicker" :disabled="!selectedApplication">
+							<option :value="null">Version</option>
+							<option v-for="version in versions">{{version}}</option>
+						</select>
+						<button type="button" class="btn btn-success btn-lg"
+							v-on:click="addSelectedApplicationToJob"
+							:disabled="!selectedApplication || !selectedVersion">
+							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+							Add to Job
+						</button>
+					</h3>
+				</div>
+			</div>
+
+
+			<div>
+				<table class="table table-bordered">
+					<tr>
+						<th>Application</th>
+						<th>Version</th>
+						<th>Actions</th>
+					</tr>
+					<tr class="active" v-for="app in job">
+						<td>{{app.name}}</td>
+						<td>{{app.version}}</td>
+						<td><a class="btn btn-danger" href="#" role="button"
+							v-on:click="removeApplicationFromJob(app)">Remove</a></td>
+					</tr>
+				</table>
+			</div>
+
+			<p class="lead">
+				<button type="button" class="btn btn-danger"
+							v-on:click="resetJob"
+							:disabled="job.length === 0">
+							<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+							Remove all applications from Job
+				</button>
+			</p>
+
+			<p class="lead">
+				<button type="button" class="btn btn-success btn-lg"
+					v-on:click="executeJob"
+					:disabled="!selectedStage || job.length === 0">
+					<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
+					Execute Job on Stage
+				</button>
+				<select v-model="selectedStage" id="newjob_stage"
+					class="selectpicker" :disabled="stages.length === 0">
+					<option :value="null">Stage</option>
+					<option v-for="stage in stages">{{stage}}</option>
+				</select>
+			</p>
+
+	      <div class="page-header">
+	        <h2>Executed Staging Jobs</h2>
+	      </div>
+
+	      <table id="history" class="table table-bordered">
+	        <thead>
+	          <tr>
+	            <th>Application</th>
+	            <th>Version</th>
+	            <th>Project</th>
+	            <th>Result</th>
+	          </tr>
+	        </thead>
+	        <tbody v-for="job in jobHistory">
+	          <tr class="info">
+	            <td colspan="4">Deployment Job to Stage {{job.stage}} at {{job.creationTime | formatDate}}</td>
+	          </tr>
+	          <tr v-for="deployment in job.deployments" v-bind:class="{ success: deployment.successful, danger: !deployment.successful }">
+	            <td>{{deployment.image.name}}</td>
+	            <td>{{deployment.image.tag}}</td>
+	            <td>{{deployment.image.project}}</td>
+	            <td v-if="deployment.successful">done</td>
+	            <td v-else>{{deployment.message}}</td>
+	          </tr>
+	        </tbody>
+	      </table>
+	    </div>
+	</div>
+	<div id="footer">
+		<div class="container">
+			<p class="text-muted credit">
+				Core Insurance Sandboxes
+			</p>
+		</div>
+	</div>
+	<script type='text/javascript'
+		src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script type='text/javascript'
+		src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>
+	<script type='text/javascript' src="es6-promise.auto.min.js"></script>
+	<script src="vue.min.js"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://unpkg.com/vue-toasted"></script>
+	<script type='text/javascript' src="app_4.js"></script>
+
+	<!-- JavaScript jQuery code from Bootply.com editor  -->
+	<script type='text/javascript'>
+      $(document).ready(function () {
+
+      });
+  </script>
+</body>
+
+</html>
